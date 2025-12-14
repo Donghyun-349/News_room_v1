@@ -1,0 +1,77 @@
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# ChromaDB
+chroma_db/
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials (보안 필수)
+credentials/
+.env
+
+# Generated reports
+daily_market_report.md
+report_*.md  # 생성된 보고서 파일들
+# 특정 보고서 파일들 (생성된 결과물)
+Macro.md
+Korea 부동산.md
+
+# Temporary/Test files
+debug_output*.txt
+verification_output*.txt
+*_backup/
+
+# Setup scripts (한 번 실행 후 불필요)
+setup_*.py
+
+# Migration scripts (마이그레이션 완료 후 불필요)
+database/migrate_*.py
+database/setup_db.py
+
+# Individual export scripts (export_to_google_sheets.py만 유지)
+export_to_spreadsheet.py
+export_collected_news.py
+export_issues_only.py
+export_mapping.py
+export_news_simple.py
+
+# Individual run scripts (main.py로 통합됨)
+run_*.py
+
+# Individual view scripts (Streamlit 앱으로 대체)
+view_*.py
+
+# Statistics scripts
+collection_stats.py

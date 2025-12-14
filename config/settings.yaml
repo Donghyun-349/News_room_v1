@@ -1,0 +1,136 @@
+# Smart Investment Assistant 설정 파일
+
+# 카테고리 기반 뉴스 수집 설정
+categories:
+  - name: "Global Macro"
+    max_articles: 100  # 최대 수집 기사 수
+    rss_url_template: "https://news.google.com/rss/search?q={keyword}&hl={hl}&gl={gl}&ceid={ceid}"
+    region: "us"  # 검색 지역
+    language: "en"  # 검색 언어
+    keywords:
+      - '("Federal Reserve" OR "Fed" OR "FOMC" OR "Powell") AND ("Interest Rate" OR "Inflation" OR "CPI" OR "PCE" OR "Labor Market" OR "Treasury Yield" OR "QE" OR "QT") -FedEx -Opinion'
+    
+  - name: "Korea Market"
+    max_articles: 100  # 최대 수집 기사 수
+    rss_url_template: "https://news.google.com/rss/search?q={keyword}&hl={hl}&gl={gl}&ceid={ceid}"
+    region: "kr"  # 검색 지역
+    language: "ko"  # 검색 언어
+    keywords:
+      - '(kospi OR kosdaq OR 코스피 OR 코스닥 OR 한국은행) AND (금리 OR 기관 OR 수급 OR 모멘텀 OR 밸류업 OR 환율)'
+
+# 표준 분류 태그 (Meta Tags)
+meta_tags:
+  - "Macro"
+  - "Semiconductor"
+  - "Bio"
+  - "Corporate_Event"
+  - "Energy"
+  - "Finance"
+  - "Technology"
+  - "Real_Estate"
+  - "Consumer"
+  - "Policy"
+
+# 언론사 신뢰도 가중치
+publisher_weights:
+  tier1:
+    sources:
+      - "Reuters"
+      - "Bloomberg"
+      - "Wall Street Journal"
+      - "Financial Times"
+      - "조선일보"
+      - "중앙일보"
+      - "동아일보"
+      - "매일일경제"
+    weight: 1.35
+  
+  tier2:
+    sources:
+      - "CNBC"
+      - "Forbes"
+      - "MarketWatch"
+      - "한국경제"
+    weight: 1.2
+  
+  default:
+    weight: 1.0
+
+# 클러스터링 파라미터
+clustering:
+  eps: 0.30             # DBSCAN 거리 임계값 (0~1, 작을수록 엄격) - 매우 엄격하게 설정하여 주제별 분리 강화
+  min_samples: 2        # 클러스터 최소 기사 수 (2개 이상이면 클러스터로 인정)
+  mmr_diversity: 0.3    # MMR 다양성 가중치 (0~1, 낮을수록 중요도 중시) - 중요도 70%, 다양성 30%
+
+# 재배포 사이트 목록 (중복 기사 제거 시 우선 제거 대상)
+repost_sites:
+  - "Yahoo Finance"
+  - "Yahoo"
+  - "Google News"
+  - "MSN"
+  - "AOL"
+  - "News.google.com"
+
+# Rate Limiting 설정
+rate_limit:
+  google_rss_delay: 2.0  # Google RSS 요청 간 딜레이 (초)
+  openai_delay: 0.1      # OpenAI API 요청 간 딜레이 (초)
+
+# 로깅 설정
+logging:
+  level: "INFO"         # DEBUG, INFO, WARNING, ERROR
+  file: "logs/app.log"
+  max_bytes: 10485760   # 10MB
+  backup_count: 5       # 로그 파일 보관 개수
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# LLM 설정
+llm:
+  provider: "gemini"  # "openai" 또는 "gemini"
+  model: "gemini-2.0-flash"  # Gemini 모델명 (gemini-2.0-flash-exp 또는 gemini-1.5-flash)
+  temperature: 0.3
+  max_tokens: 2000
+  embedding_model: "text-embedding-3-small"  # OpenAI 임베딩 모델 (유지)
+  embedding_provider: "openai"  # 임베딩은 OpenAI 사용
+
+# 분석 설정
+analysis:
+  max_articles_per_cluster: 5    # 클러스터당 최대 기사 수
+  min_cluster_size: 2           # 최소 클러스터 크기
+  max_cluster_size: 20          # 최대 클러스터 크기 (초과 시 분할)
+  max_article_age_hours: null   # 분석 대상 기사의 최대 연령 (시간 단위, null이면 제한 없음, 48시간 이상된 기사는 분석 제외)
+
+# 구글 스프레드시트 연동 설정
+google_sheets:
+  enabled: true                  # 스프레드시트 연동 활성화 여부
+  # 스프레드시트 ID는 환경변수로 설정 (GOOGLE_SPREADSHEET_ID, GOOGLE_SETTINGS_SPREADSHEET_ID)
+  # 환경변수가 없을 경우에만 아래 값을 사용 (하위 호환성)
+  spreadsheet_id: ""             # 실행 결과 저장용 스프레드시트 ID (환경변수 GOOGLE_SPREADSHEET_ID 우선)
+  settings_spreadsheet_id: ""    # 설정값 저장용 스프레드시트 ID (환경변수 GOOGLE_SETTINGS_SPREADSHEET_ID 우선)
+  service_account_json: ""       # 서비스 계정 JSON 파일 경로 (선택사항, 환경변수로도 설정 가능)
+  tabs:
+    news_collection: "뉴스 수집"      # 뉴스 수집 탭 이름
+    issues: "이슈 목록"              # 이슈 목록 탭 이름
+    mapping: "이슈-뉴스 매핑"         # 매핑 탭 이름
+    feedback: "feedback"             # 사용자 피드백 탭 이름 (설정 스프레드시트)
+
+# 보고서 그룹 설정 (선택사항)
+# 설정하지 않으면 모든 카테고리를 하나의 보고서로 생성
+# report_groups:
+#   - name: "A 보고서"
+#     categories:
+#       - "Global Macro"
+#       - "Korea Market"
+#     output_file: "report_a.md"
+#   
+#   - name: "B 보고서"
+#     categories:
+#       - "카테고리 3"
+#       - "카테고리 4"
+#     output_file: "report_b.md"
+#   
+#   - name: "C 보고서"
+#     categories:
+#       - "카테고리 5"
+#       - "카테고리 6"
+#     output_file: "report_c.md"
