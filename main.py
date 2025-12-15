@@ -355,7 +355,7 @@ def main():
                     logger.info("=" * 50)
                     
                     from modules.email_sender import EmailSender
-                    from pathlib import Path
+                  
                     
                     # 생성된 보고서 파일 경로 수집
                     report_files = {}
@@ -413,7 +413,7 @@ def main():
                         logger.info("=" * 50)
                         
                         from modules.email_sender import EmailSender
-                        from pathlib import Path
+                      
                         
                         report_path = Path(project_root) / "daily_market_report.md"
                         if report_path.exists():
