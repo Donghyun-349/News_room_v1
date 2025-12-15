@@ -23,7 +23,7 @@ jobs:
     
     - name: Write Google service account file
       run: |
-  
+        mkdir -p config
         echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" > config/News_db_setting.json
     
     - name: Install dependencies
