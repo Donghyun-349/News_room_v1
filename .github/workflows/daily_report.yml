@@ -23,7 +23,8 @@ jobs:
     
     - name: Write Google service account file
       run: |
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" > service_account.json
+#     echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" > service_account.json
+        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" > config/News_db_setting.json
     
     - name: Install dependencies
       run: |
@@ -39,8 +40,9 @@ jobs:
         # Google Sheets
         GOOGLE_SPREADSHEET_ID: ${{ secrets.GOOGLE_SPREADSHEET_ID }}
         GOOGLE_SETTINGS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SETTINGS_SPREADSHEET_ID }}
-        GOOGLE_SERVICE_ACCOUNT_JSON: ${{ github.workspace }}/service_account.json
-        
+ #       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ github.workspace }}/service_account.json
+        GOOGLE_SERVICE_ACCOUNT_JSON: ${{ github.workspace }}/config/News_db_setting.json
+
         # Email Settings
         SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
         SMTP_PORT: ${{ secrets.SMTP_PORT }}
