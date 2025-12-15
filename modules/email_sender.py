@@ -76,7 +76,10 @@ class EmailSender:
                 if not in_list:
                     result_lines.append('<ul>')
                     in_list = True
-                result_lines.append(f'<li>{re.sub(r"^- (.+)$", r"\\1", line)}</li>')
+                # 에러 -> result_lines.append(f'<li>{re.sub(r"^- (.+)$", r"\\1", line)}</li>')
+                # 정규표현식 처리를 변수(clean_line)로 밖으로 빼주면 해결됩니다.
+                clean_line = re.sub(r"^- (.+)$", r"\1", line)
+                result_lines.append(f'<li>{clean_line}</li>')
             else:
                 if in_list:
                     result_lines.append('</ul>')
