@@ -279,39 +279,34 @@ class SettingsLoader:
             logger.warning(f"'{tab_name}' 탭을 찾을 수 없거나 로드 실패: {e}")
     
     def _load_system_settings(self):
-        """시스템 설정을 로드합니다."""
+        """
+        시스템 설정을 로드합니다.
+
+        현재는 단일 플래그(reset_database)만 사용하며,
+        '시스템 설정' 시트의 B2 셀 값을 읽어 True/False 로 해석합니다.
+        """
         tab_name = "시스템 설정"
         
         try:
             worksheet = self.sheets_exporter.spreadsheet.worksheet(tab_name)
-            records = worksheet.get_all_records()
             
-            system_settings = {}
-            for record in records:
-                setting_name = record.get('setting_name', '').strip().lower()
-                value = record.get('value', '').strip()
-                
-                if not setting_name:
-                    continue
-                
-                # 값 타입 변환
-                if value.lower() in ['true', '1', 'yes', 'on']:
-                    value = True
-                elif value.lower() in ['false', '0', 'no', 'off']:
-                    value = False
-                elif value.isdigit():
-                    value = int(value)
-                else:
-                    try:
-                        value = float(value)
-                    except:
-                        pass  # 문자열로 유지
-                
-                system_settings[setting_name] = value
+            # B2 셀 값 읽기 (reset_database 플래그)
+            raw = worksheet.acell("B2").value
+            raw_str = str(raw).strip().lower() if raw is not None else ""
             
-            if system_settings:
-                self.settings_cache['system_settings'] = system_settings
-                logger.info(f"시스템 설정 {len(system_settings)}개를 로드했습니다.")
+            if not raw_str:
+                reset = False
+            elif raw_str in ['true', '1', 'yes', 'on']:
+                reset = True
+            elif raw_str in ['false', '0', 'no', 'off']:
+                reset = False
+            else:
+                logger.warning(f"'시스템 설정'!B2 값을 해석할 수 없습니다: {raw!r}, 기본값 False 를 사용합니다.")
+                reset = False
+            
+            system_settings = {'reset_database': reset}
+            self.settings_cache['system_settings'] = system_settings
+            logger.info(f"시스템 설정 로드 완료: reset_database={reset}")
         except Exception as e:
             logger.warning(f"'{tab_name}' 탭을 찾을 수 없거나 로드 실패: {e}")
             # 기본값 설정
