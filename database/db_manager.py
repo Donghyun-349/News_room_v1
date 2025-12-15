@@ -45,6 +45,10 @@ class DatabaseManager:
         
         self.db_path = Path(db_path).resolve()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 데이터베이스 스키마가 없으면 생성/업데이트
+        # (schema.sql은 CREATE TABLE IF NOT EXISTS 를 사용하므로 여러 번 실행해도 안전)
+        self._initialize_database()
     
     @contextmanager
     def get_connection(self):
@@ -59,6 +63,30 @@ class DatabaseManager:
             raise
         finally:
             conn.close()
+    
+    def _initialize_database(self):
+        """
+        database/schema.sql 파일을 사용해 데이터베이스 스키마를 초기화/보장합니다.
+        
+        - news, issues, issue_news_mapping 테이블과 관련 인덱스를 생성합니다.
+        - schema.sql 은 IF NOT EXISTS 를 사용하므로 여러 번 실행해도 안전합니다.
+        """
+        try:
+            schema_path = Path(__file__).parent / "schema.sql"
+            if not schema_path.exists():
+                logger.warning(f"데이터베이스 스키마 파일을 찾을 수 없습니다: {schema_path}")
+                return
+            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                with open(schema_path, "r", encoding="utf-8") as f:
+                    schema_sql = f.read()
+                cursor.executescript(schema_sql)
+                logger.info("데이터베이스 스키마 초기화/업데이트 완료 (schema.sql 적용)")
+        except Exception as e:
+            # 스키마 초기화 실패는 이후 로직에 영향을 줄 수 있으므로 로그만 남기고 예외는 다시 던집니다.
+            logger.error(f"데이터베이스 스키마 초기화 실패: {e}", exc_info=True)
+            raise
     
     # ========== News 관련 함수 ==========
     
