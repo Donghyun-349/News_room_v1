@@ -22,9 +22,13 @@ jobs:
         python-version: '3.11'
     
     - name: Write Google service account file
+      env:
+        # 1. 시크릿을 먼저 환경 변수(GOOGLE_JSON)에 안전하게 담습니다.
+        GOOGLE_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
       run: |
         mkdir -p config
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" > config/News_db_setting.json
+        # 2. 환경 변수를 출력하면 따옴표가 그대로 유지됩니다.
+        echo "$GOOGLE_JSON" > config/News_db_setting.json
     
     - name: Install dependencies
       run: |
