@@ -37,6 +37,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# [수정] 템플릿 포맷팅 시 키가 없어도 에러가 나지 않도록 하는 안전한 딕셔너리
+class SafeDict(dict):
+    def __missing__(self, key):
+        return f"{{{key}}}"  # 데이터가 없으면 {키이름} 그대로 문자로 출력
+
 
 class DailyReportGenerator:
     """일일 시장 리포트 생성기"""
@@ -643,7 +648,7 @@ class DailyReportGenerator:
                                       consolidated_themes: Dict[str, List[Dict[str, Any]]],
                                       executive_summary: Dict[str, str],
                                       investor_note: Dict[str, str]) -> str:
-        """스프레드시트 템플릿을 사용하여 보고서 생성"""
+        """스프레드시트 템플릿을 사용하여 보고서 생성 (SafeDict 적용)"""
         report_parts = []
         date_short = datetime.now().strftime("%Y.%m.%d")
         generated_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -660,15 +665,18 @@ class DailyReportGenerator:
             section_data = template[section_id]
             template_text = section_data['template']
             
+            # [수정] 각 섹션별로 필요한 데이터를 딕셔너리로 만들고 SafeDict로 감싸서 format_map 사용
             if section_id == 'a':  # header
-                report_parts.append(template_text.format(date_short=date_short) + "\n\n")
+                context = {'date_short': date_short}
+                report_parts.append(template_text.format_map(SafeDict(context)) + "\n\n")
                 
             elif section_id == 'b':  # executive_summary
-                report_parts.append(template_text.format(
-                    executive_summary_global=executive_summary.get('global', 'N/A'),
-                    executive_summary_korea=executive_summary.get('korea', 'N/A'),
-                    executive_summary_key_indicator=executive_summary.get('key_indicator', 'N/A')
-                ) + "\n\n")
+                context = {
+                    'executive_summary_global': executive_summary.get('global', 'N/A'),
+                    'executive_summary_korea': executive_summary.get('korea', 'N/A'),
+                    'executive_summary_key_indicator': executive_summary.get('key_indicator', 'N/A')
+                }
+                report_parts.append(template_text.format_map(SafeDict(context)) + "\n\n")
                 
             elif section_id == 'c':  # sector_analysis_header
                 report_parts.append(template_text)
@@ -676,7 +684,8 @@ class DailyReportGenerator:
             elif section_id == 'd':  # category_header
                 # 카테고리별로 반복
                 for category, themes in consolidated_themes.items():
-                    report_parts.append(template_text.format(category=category) + "\n")
+                    context = {'category': category}
+                    report_parts.append(template_text.format_map(SafeDict(context)) + "\n")
                     # 다음 섹션들도 처리 (e, f, g)
                     category_parts, i = self._process_category_sections(
                         template, sorted_sections, themes, 
@@ -686,13 +695,15 @@ class DailyReportGenerator:
                 continue  # continue로 다음 루프로
                 
             elif section_id == 'h':  # investor_note
-                report_parts.append(template_text.format(
-                    investor_note_caution=investor_note.get('caution', 'N/A'),
-                    investor_note_action=investor_note.get('action', 'N/A')
-                ) + "\n\n")
+                context = {
+                    'investor_note_caution': investor_note.get('caution', 'N/A'),
+                    'investor_note_action': investor_note.get('action', 'N/A')
+                }
+                report_parts.append(template_text.format_map(SafeDict(context)) + "\n\n")
                 
             elif section_id == 'i':  # footer
-                report_parts.append(template_text.format(generated_time=generated_time))
+                context = {'generated_time': generated_time}
+                report_parts.append(template_text.format_map(SafeDict(context)))
             
             i += 1
         
@@ -713,26 +724,25 @@ class DailyReportGenerator:
                     continue
                     
                 if section_id == 'e':  # theme_section
-                    parts.append(template[section_id]['template'].format(
-                        theme_title=theme['theme_title'],
-                        deep_dive=theme['deep_dive']
-                    ) + "\n")
+                    context = {
+                        'theme_title': theme['theme_title'],
+                        'deep_dive': theme['deep_dive']
+                    }
+                    parts.append(template[section_id]['template'].format_map(SafeDict(context)) + "\n")
                     idx += 1
                     
                 elif section_id == 'f':  # key_news
                     key_news_list = self._format_key_news(theme, date_short)
                     if key_news_list:
-                        parts.append(template[section_id]['template'].format(
-                            key_news_list=key_news_list
-                        ) + "\n")
+                        context = {'key_news_list': key_news_list}
+                        parts.append(template[section_id]['template'].format_map(SafeDict(context)) + "\n")
                     idx += 1
                     
                 elif section_id == 'g':  # feedback_section
                     feedback_list = self._format_feedback_news(theme, date_short)
                     if feedback_list:
-                        parts.append(template[section_id]['template'].format(
-                            feedback_news_list=feedback_list
-                        ) + "\n")
+                        context = {'feedback_news_list': feedback_list}
+                        parts.append(template[section_id]['template'].format_map(SafeDict(context)) + "\n")
                     idx += 1
         
         return parts, idx
@@ -862,8 +872,8 @@ class DailyReportGenerator:
         return "\n".join(feedback_list)
     
     def _generate_report_with_default_template(self, consolidated_themes: Dict[str, List[Dict[str, Any]]],
-                                              executive_summary: Dict[str, str],
-                                              investor_note: Dict[str, str]) -> str:
+                                               executive_summary: Dict[str, str],
+                                               investor_note: Dict[str, str]) -> str:
         """기본 템플릿 사용 (현재 코드 그대로)"""
         # Markdown 리포트 생성
         today = datetime.now().strftime("%Y년 %m월 %d일")
@@ -1045,7 +1055,7 @@ Date: {date_short}
         print()
     
     def run(self, category_filter: Optional[List[str]] = None, 
-           report_name: Optional[str] = None, sections: Optional[List[str]] = None):
+            report_name: Optional[str] = None, sections: Optional[List[str]] = None):
         """
         전체 파이프라인 실행
         
@@ -1189,4 +1199,3 @@ if __name__ == "__main__":
         generator.run_by_groups()
     else:
         generator.run()
-
